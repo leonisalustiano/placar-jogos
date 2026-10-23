@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Placar do Duelo</title>
+<style>
+:root{--bg:#f3f1ec;--card:#fff;--ink:#1b2230;--mute:#6b7385;--line:#dcd8cf;--a:#d97b00;--b:#0f8a8a;--ok:#2e7d32;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141d;--card:#1a2030;--ink:#eef0f5;--mute:#9aa3b8;--line:#2d3550;--a:#ffa726;--b:#3cc9c9;--ok:#6fcf74}}
+:root[data-theme="dark"]{--bg:#10141d;--card:#1a2030;--ink:#eef0f5;--mute:#9aa3b8;--line:#2d3550;--a:#ffa726;--b:#3cc9c9;--ok:#6fcf74}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 Roboto,system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:16px}
+h1,h2,.num{font-family:sans-serif-condensed,"Roboto Condensed","Arial Narrow",sans-serif;margin:0}
+h1{font-size:28px;font-weight:800}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
+.board{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;text-align:center;align-items:center}
+.board .num{font-size:72px;font-weight:800;line-height:1}
+.p1 .num,.c1{color:var(--a)}.p2 .num,.c2{color:var(--b)}
+.pname{font-weight:600}.mute{color:var(--mute);font-size:14px}
+.draws{font-family:sans-serif-condensed;font-size:20px;color:var(--mute)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-size:14px;color:var(--mute);margin-bottom:2px}
+input,select{width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--b);outline-offset:1px}
+.score{font-family:sans-serif-condensed;font-size:34px;font-weight:800;text-align:center}
+.side1{border-left:5px solid var(--a);padding-left:10px}.side2{border-left:5px solid var(--b);padding-left:10px}
+button{font:inherit;font-weight:600;padding:11px 16px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+button.main{background:var(--ink);color:var(--bg);border-color:var(--ink);width:100%;margin-top:12px;font-size:17px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>button{flex:1}
+table{width:100%;border-collapse:collapse;font-size:15px}
+th,td{padding:6px 4px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--mute);font-weight:600;font-size:13px}
+.wrap{overflow-x:auto}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.stat{border:1px solid var(--line);border-radius:10px;padding:10px}
+.stat .num{font-size:34px;font-weight:800}
+.del{padding:2px 8px;font-size:13px}
+#reg{display:none}#reg.open{display:block}
+.err{color:#c62828;font-size:14px;min-height:20px;margin-top:6px}
+.hist .m{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.hist .sc{font-family:sans-serif-condensed;font-size:24px;font-weight:800}
+.hist .t2{text-align:right}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Placar do Duelo</h1><button onclick="toggleTheme()" aria-label="Alternar tema">Tema</button></header>
+
+<section class="card">
+  <div class="board">
+    <div class="p1"><div class="pname" id="bn1">Jogador 1</div><div class="num" id="bw1">0</div><div class="mute">vitórias</div></div>
+    <div class="draws" id="bd">0 empates</div>
+    <div class="p2"><div class="pname" id="bn2">Jogador 2</div><div class="num" id="bw2">0</div><div class="mute">vitórias</div></div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Nova partida</h2>
+  <div class="grid2" style="margin-top:8px">
+    <div class="side1"><label for="n1">Nome</label><input id="n1" value="Jogador 1" oninput="saveNames()" maxlength="20">
+      <label for="sel1" style="margin-top:8px">Time</label><select id="sel1" onchange="pick(1)"></select><input id="t1" style="margin-top:6px" placeholder="ou digite outro time" autocomplete="off">
+      <label for="s1" style="margin-top:8px">Gols</label><input id="s1" class="score" type="number" min="0" inputmode="numeric" value="0"></div>
+    <div class="side2"><label for="n2">Nome</label><input id="n2" value="Jogador 2" oninput="saveNames()" maxlength="20">
+      <label for="sel2" style="margin-top:8px">Time</label><select id="sel2" onchange="pick(2)"></select><input id="t2" style="margin-top:6px" placeholder="ou digite outro time" autocomplete="off">
+      <label for="s2" style="margin-top:8px">Gols</label><input id="s2" class="score" type="number" min="0" inputmode="numeric" value="0"></div>
+  </div>
+    <div class="err" id="err" role="alert"></div>
+  <button class="main" onclick="addMatch()">Registrar partida</button>
+</section>
+
+<div class="row" style="margin-bottom:12px">
+  <button class="main" style="margin:0" id="btnReg" onclick="toggleReg()">Ver registros</button>
+</div>
+
+<section id="reg">
+  <div class="card"><h2>Resumo</h2><div class="stats" id="stats" style="margin-top:8px"></div></div>
+  <div class="card"><h2>Times usados</h2><div class="wrap" id="teams"></div></div>
+  <div class="card"><h2>Histórico</h2><div class="hist" id="hist"></div></div>
+  <div class="row">
+    <button onclick="exportJson()">Exportar / compartilhar</button>
+    <button onclick="resetAll()">Apagar tudo</button>
+  </div>
+  <div class="mute" id="msg" style="margin-top:8px"></div>
+</section>
+</main>
+
+<script>
+const EU=["Real Madrid","Barcelona","Atlético de Madrid","Sevilla","Real Sociedad","Athletic Bilbao","Villarreal","Valencia","Real Betis","Manchester City","Liverpool","Arsenal","Manchester United","Chelsea","Tottenham","Newcastle","Aston Villa","West Ham","Bayern de Munique","Borussia Dortmund","RB Leipzig","Bayer Leverkusen","Eintracht Frankfurt","Stuttgart","Inter de Milão","Milan","Juventus","Napoli","Roma","Lazio","Atalanta","Fiorentina","PSG","Olympique de Marselha","Monaco","Lyon","Lille","Benfica","Porto","Sporting CP","Braga","Ajax","PSV","Feyenoord","Celtic","Rangers","Galatasaray","Fenerbahçe","Club Brugge","Shakhtar Donetsk"];
+const BR=["Flamengo","Palmeiras","Cruzeiro","Mirassol","Fluminense","Botafogo","Bahia","São Paulo","Grêmio","Red Bull Bragantino","Atlético-MG","Santos","Corinthians","Vasco","Vitória","Internacional","Coritiba","Athletico-PR","Chapecoense","Remo"];
+const KEY="placar-duelo-v1";
+let S={n1:"Jogador 1",n2:"Jogador 2",m:[]};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function load(){try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function saveNames(){S.n1=$("n1").value.trim()||"Jogador 1";S.n2=$("n2").value.trim()||"Jogador 2";save();render()}
+
+function addMatch(){
+  const s1=parseInt($("s1").value,10),s2=parseInt($("s2").value,10);
+  const t1=$("t1").value.trim(),t2=$("t2").value.trim();
+  if(!t1||!t2){$("err").textContent="Escolha o time dos dois jogadores.";return}
+  if(isNaN(s1)||isNaN(s2)||s1<0||s2<0){$("err").textContent="Informe os gols de cada lado.";return}
+  $("err").textContent="";
+  S.m.push({id:Date.now(),d:new Date().toISOString(),t1,t2,s1,s2});
+  save();$("s1").value=0;$("s2").value=0;render();
+}
+function delMatch(id){S.m=S.m.filter(x=>x.id!==id);save();render()}
+function resetAll(){if(confirm("Apagar todos os registros?")){S.m=[];save();render()}}
+function toggleReg(){const o=$("reg").classList.toggle("open");$("btnReg").textContent=o?"Ocultar registros":"Ver registros";render()}
+function toggleTheme(){const r=document.documentElement;const dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dark?"light":"dark"}
+function pick(i){$("t"+i).value=$("sel"+i).value}
+async function exportJson(){
+  const j=JSON.stringify(S,null,2);
+  try{
+    const sh=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.Share;
+    if(sh){await sh.share({title:"Placar do Duelo",text:j,dialogTitle:"Exportar registros"});return}
+    await navigator.clipboard.writeText(j);$("msg").textContent="Dados copiados."
+  }catch(e){$("msg").textContent="Não foi possível exportar."}
+}
+
+function calc(){
+  const r={w1:0,w2:0,d:0,g1:0,g2:0,cur:{p:0,n:0},best:[0,0,0],teams:[{},{}]};
+  let run=0,runP=0;
+  S.m.forEach(x=>{
+    r.g1+=x.s1;r.g2+=x.s2;
+    const w=x.s1>x.s2?1:x.s2>x.s1?2:0;
+    if(w===1)r.w1++;else if(w===2)r.w2++;else r.d++;
+    if(w&&w===runP)run++;else if(w){runP=w;run=1}else{runP=0;run=0}
+    if(w&&run>r.best[w])r.best[w]=run;
+    [[x.t1,x.s1,x.s2,0],[x.t2,x.s2,x.s1,1]].forEach(([t,gf,ga,i])=>{
+      const o=r.teams[i][t]||(r.teams[i][t]={j:0,v:0,e:0,d:0,gf:0,gc:0});
+      o.j++;o.gf+=gf;o.gc+=ga;if(gf>ga)o.v++;else if(gf<ga)o.d++;else o.e++;
+    });
+  });
+  r.cur={p:runP,n:run};
+  return r;
+}
+
+function render(){
+  const r=calc();
+  $("bn1").textContent=S.n1;$("bn2").textContent=S.n2;
+  $("bw1").textContent=r.w1;$("bw2").textContent=r.w2;
+  $("bd").textContent=r.d+(r.d===1?" empate":" empates");
+  if(!$("reg").classList.contains("open"))return;
+  const cur=r.cur.n?`${r.cur.n} de ${r.cur.p===1?S.n1:S.n2}`:"nenhuma";
+  const st=[
+    ["Partidas",S.m.length,""],
+    [`Gols de ${esc(S.n1)}`,r.g1,"c1"],
+    [`Gols de ${esc(S.n2)}`,r.g2,"c2"],
+    ["Sequência atual",cur,""],
+    [`Melhor seq. ${esc(S.n1)}`,r.best[1],"c1"],
+    [`Melhor seq. ${esc(S.n2)}`,r.best[2],"c2"]
+  ];
+  $("stats").innerHTML=st.map(([l,v,c])=>`<div class="stat"><div class="mute">${l}</div><div class="num ${c}" ${typeof v==="string"?'style="font-size:22px"':""}>${esc(v)}</div></div>`).join("");
+
+  const tt=i=>{
+    const e=Object.entries(r.teams[i]).sort((a,b)=>b[1].j-a[1].j);
+    if(!e.length)return `<p class="mute">Sem times ainda.</p>`;
+    return `<table><tr><th>${esc(i?S.n2:S.n1)}</th><th>J</th><th>V</th><th>E</th><th>D</th><th>Gols</th></tr>`+
+      e.map(([t,o])=>`<tr><td>${esc(t)}</td><td>${o.j}</td><td>${o.v}</td><td>${o.e}</td><td>${o.d}</td><td>${o.gf}:${o.gc}</td></tr>`).join("")+`</table>`;
+  };
+  $("teams").innerHTML=tt(0)+`<div style="height:12px"></div>`+tt(1);
+
+  $("hist").innerHTML=S.m.length?S.m.slice().reverse().map(x=>{
+    const dt=new Date(x.d).toLocaleDateString("pt-BR");
+    return `<div class="m"><div><div class="c1" style="font-weight:600">${esc(x.t1)}</div><div class="mute">${dt}</div></div>
+      <div class="sc">${x.s1} x ${x.s2}</div><div class="t2"><div class="c2" style="font-weight:600">${esc(x.t2)}</div></div>
+      <button class="del" onclick="delMatch(${x.id})" aria-label="Excluir partida">Excluir</button></div>`}).join(""):`<p class="mute">Nenhuma partida registrada. Registre a primeira acima.</p>`;
+}
+
+function init(){
+  load();
+  $("n1").value=S.n1;$("n2").value=S.n2;
+  const grp=(l,a)=>`<optgroup label="${l}">`+a.map(t=>`<option>${esc(t)}</option>`).join("")+`</optgroup>`;
+  const opts=`<option value="">Escolher time...</option>`+grp("Brasil - Série A",BR)+grp("Europa - Top 50",EU);
+  $("sel1").innerHTML=opts;$("sel2").innerHTML=opts;
+  render();
+}
+init();
+</script>
+</body>
+</html>
